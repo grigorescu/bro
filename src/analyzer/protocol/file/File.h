@@ -58,6 +58,20 @@ public:
 		{ return new FTP_Data(conn); }
 };
 
+class TFTP_Data : public File_Analyzer {
+public:
+	TFTP_Data(Connection* conn);
+
+	virtual void Done();
+
+	virtual void DeliverStream(int len, const u_char* data, bool orig);
+
+	virtual void Undelivered(int seq, int len, bool orig);
+
+	static Analyzer* InstantiateAnalyzer(Connection* conn)
+		{ return new TFTP_Data(conn); }
+};
+
 } } // namespace analyzer::* 
 
 #endif

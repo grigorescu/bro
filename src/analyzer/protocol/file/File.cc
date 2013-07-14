@@ -104,3 +104,26 @@ void FTP_Data::Undelivered(int seq, int len, bool orig)
 	File_Analyzer::Undelivered(seq, len, orig);
 	file_mgr->Gap(seq, len, GetAnalyzerTag(), Conn(), orig);
 	}
+
+TFTP_Data::TFTP_Data(Connection* conn)
+	: File_Analyzer("TFTP_Data", conn)
+	{
+	}
+
+void TFTP_Data::Done()
+	{
+	File_Analyzer::Done();
+	file_mgr->EndOfFile(GetAnalyzerTag(), Conn());
+	}
+
+void TFTP_Data::DeliverStream(int len, const u_char* data, bool orig)
+	{
+	File_Analyzer::DeliverStream(len, data, orig);
+	file_mgr->DataIn(data, len, GetAnalyzerTag(), Conn(), orig);
+	}
+
+void TFTP_Data::Undelivered(int seq, int len, bool orig)
+	{
+	File_Analyzer::Undelivered(seq, len, orig);
+	file_mgr->Gap(seq, len, GetAnalyzerTag(), Conn(), orig);
+	}

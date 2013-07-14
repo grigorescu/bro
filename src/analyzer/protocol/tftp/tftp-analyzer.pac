@@ -15,18 +15,12 @@ flow TFTP_Flow
 
 	function process_tftp_message(m: TFTP_Message): bool
 		%{
-		//printf("blah: %d\n", ${m.opcode});
-		//BifEvent::generate_syslog_message(connection()->bro_analyzer(),
-		//                                  connection()->bro_analyzer()->Conn(),
-		//                                  ${m.PRI.facility},
-		//                                  ${m.PRI.severity},
-		//                                  new StringVal(${m.msg}.length(), (const char*) //${m.msg}.begin())
-		//                                  );
 		return true;
 		%}
 
 	function process_read_request(m: ReadRequest): bool
 		%{
+		connection()->bro_analyzer()->ProtocolConfirmation();
 		BifEvent::generate_tftp_read_request(connection()->bro_analyzer(),
 		                                     connection()->bro_analyzer()->Conn(),
 		                                     bytestring_to_val(${m.file}),
@@ -36,6 +30,7 @@ flow TFTP_Flow
 
 	function process_write_request(m: WriteRequest): bool
 		%{
+		connection()->bro_analyzer()->ProtocolConfirmation();
 		BifEvent::generate_tftp_write_request(connection()->bro_analyzer(),
 		                                      connection()->bro_analyzer()->Conn(),
 		                                      bytestring_to_val(${m.file}),
@@ -45,12 +40,12 @@ flow TFTP_Flow
 
 	function process_datachunk(m: DataChunk): bool
 		%{
-		//file_mgr->DataIn(reinterpret_cast<const u_char*>(${m.data}.begin(), 
-		//                 (uint64) ${m.data}.length(), 
-		//                 (uint64) ${m.block}*512,
-		//                 connection()->bro_analyzer()->GetAnalyzerTag(),
-		//                 connection()->bro_analyzer()->Conn(),
-		//                 true));
+		file_mgr->DataIn(reinterpret_cast<const u_char*>(${m.data}.begin(), 
+				 (uint64) ${m.data}.length(), 
+		                 (uint64) ${m.block}*512,
+		                 connection()->bro_analyzer()->GetAnalyzerTag(),
+		                 connection()->bro_analyzer()->Conn(),
+		                 true));
 		return true;
 		%}
 
