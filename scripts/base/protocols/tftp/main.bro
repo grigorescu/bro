@@ -71,7 +71,7 @@ event tftp_read_request(c: connection, filename: string, trans_type: string)
 
 	tftp_data_expected[c$id$orig_h, c$id$orig_p] = c$tftp;
         Analyzer::schedule_analyzer(c$id$resp_h, c$id$orig_h, c$id$orig_p, Analyzer::ANALYZER_TFTP, 5mins);
-        Analyzer::schedule_analyzer(c$id$resp_h, c$id$orig_h, c$id$orig_p, Analyzer::ANALYZER_TFTP_DATA, 5mins);
+#        Analyzer::schedule_analyzer(c$id$resp_h, c$id$orig_h, c$id$orig_p, Analyzer::ANALYZER_TFTP_DATA, 5mins);
 	Log::write(TFTP::LOG, c$tftp);
 	}
 
@@ -90,8 +90,13 @@ event tftp_write_request(c: connection, filename: string, trans_type: string)
 
 	tftp_data_expected[c$id$orig_h, c$id$orig_p] = c$tftp;
         Analyzer::schedule_analyzer(c$id$resp_h, c$id$orig_h, c$id$orig_p, Analyzer::ANALYZER_TFTP, 5mins);
-        Analyzer::schedule_analyzer(c$id$resp_h, c$id$orig_h, c$id$orig_p, Analyzer::ANALYZER_TFTP_DATA, 5mins);
+#        Analyzer::schedule_analyzer(c$id$resp_h, c$id$orig_h, c$id$orig_p, Analyzer::ANALYZER_TFTP_DATA, 5mins);
 	Log::write(TFTP::LOG, c$tftp);
+	}
+
+event tftp_data_xfer(c: connection, data: string)
+	{
+	return;
 	}
 
 event scheduled_analyzer_applied(c: connection, a: Analyzer::Tag) &priority=10

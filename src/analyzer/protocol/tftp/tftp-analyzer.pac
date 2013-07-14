@@ -40,12 +40,16 @@ flow TFTP_Flow
 
 	function process_datachunk(m: DataChunk): bool
 		%{
-		file_mgr->DataIn(reinterpret_cast<const u_char*>(${m.data}.begin(), 
+/*		file_mgr->DataIn(reinterpret_cast<const u_char*>(${m.data}.begin(), 
 				 (uint64) ${m.data}.length(), 
 		                 (uint64) ${m.block}*512,
 		                 connection()->bro_analyzer()->GetAnalyzerTag(),
 		                 connection()->bro_analyzer()->Conn(),
-		                 true));
+		                 true));*/
+		BifEvent::generate_tftp_data_xfer(connection()->bro_analyzer(),
+		                                  connection()->bro_analyzer()->Conn(),
+						  bytestring_to_val(${m.data}));
+						
 		return true;
 		%}
 
