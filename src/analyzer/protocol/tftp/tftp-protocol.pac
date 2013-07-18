@@ -15,25 +15,24 @@ type TFTP_Message = record {
 		DATA    -> data            : DataChunk;
 		ACK     -> acknowledgment  : Acknowledgment;
 		ERROR   -> error           : Error;
-		default -> failure         : Failure;
+		default -> failure         : FAILURE(opcode);
 	};
-	: bytestring &restofdata;
+	junk: bytestring &restofdata;
 } &byteorder=bigendian;
 
-type TFTP_STRING = RE/[^\x00]+/;
+type TFTP_STRING = record {
+	str:  RE/[^\x00]+/;
+	null: uint8;
+};
 
 type ReadRequest = record {
 	file: TFTP_STRING;
-	:     uint8;
 	type: TFTP_STRING;
-	:     uint8;
 };
 
 type WriteRequest = record {
 	file: TFTP_STRING;
-	:     uint8;
 	type: TFTP_STRING;
-	:     uint8;
 };
 
 type DataChunk = record {
@@ -48,9 +47,8 @@ type Acknowledgment = record {
 type Error = record {
 	errcode: uint16;
 	errmsg:  TFTP_STRING;
-	: 	 uint8;
 };
 
-type Failure = record {
-	: empty;
+type FAILURE(opcode: uint16) = record {
+	blank: empty;
 };
