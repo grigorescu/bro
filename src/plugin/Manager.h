@@ -150,6 +150,13 @@ public:
 	template<class T> std::list<T *> Components() const;
 
 	/**
+	 * Returns the (dynamic) plugin associated with a given filesytem
+	 * path. The path can be the plugin directory itself, or any path
+	 * inside it.
+	 */
+	Plugin* LookupPluginByPath(std::string path);
+
+	/**
 	 * Returns true if there's at least one plugin interested in a given
 	 * hook.
 	 *
@@ -285,6 +292,70 @@ public:
 	void HookBroObjDtor(void* obj) const;
 
 	/**
+	 * Hook into log initialization. This method will be called when a
+	 * logging writer is created. A writer represents a single logging
+	 * filter. The method is called in the main thread, on the node that
+	 * causes a log line to be written. It will _not_ be called on the logger
+	 * node. The function will be called once for every instantiated writer.
+	 *
+	 * @param writer The name of the writer being instantiated.
+	 *
+	 * @param instantiating_filter Name of the filter causing the
+	 *        writer instantiation.
+	 *
+	 * @param local True if the filter is logging locally (writer
+	 *              thread will be located in same process).
+	 *
+	 * @param remote True if filter is logging remotely (writer thread
+	 *               will be located in different thread, typically
+	 *               in manager or logger node).
+	 *
+	 * @param info WriterBackend::WriterInfo with information about the writer.
+	 *
+	 * @param num_fields number of fields in the record being written.
+	 *
+	 * @param fields threading::Field description of the fields being logged.
+	 */
+	void HookLogInit(const std::string& writer,
+	                 const std::string& instantiating_filter,
+	                 bool local, bool remote,
+	                 const logging::WriterBackend::WriterInfo& info,
+	                 int num_fields,
+	                 const threading::Field* const* fields) const;
+
+	/**
+	 * Hook into log writing. This method will be called for each log line
+	 * being written by each writer. Each writer represents a single logging
+	 * filter. The method is called in the main thread, on the node that
+	 * causes a log line to be written. It will _not_ be called on the logger
+	 * node.
+	 * This function allows plugins to modify or skip logging of information.
+	 * Note - once a log line is skipped (by returning false), it will not
+	 * passed on to hooks that have not yet been called.
+	 *
+	 * @param writer The name of the writer.
+	 *
+	 * @param filter Name of the filter being written to.
+	 *
+	 * @param info WriterBackend::WriterInfo with information about the writer.
+	 *
+	 * @param num_fields number of fields in the record being written.
+	 *
+	 * @param fields threading::Field description of the fields being logged.
+	 *
+	 * @param vals threading::Values containing the values being written. Values
+	 *             can be modified in the Hook.
+	 *
+	 * @return true if log line should be written, false if log line should be
+	 *         skipped and not passed on to the writer.
+	 */
+	bool HookLogWrite(const std::string& writer,
+	                  const std::string& filter,
+	                  const logging::WriterBackend::WriterInfo& info,
+	                  int num_fields, const threading::Field* const* fields,
+	                  threading::Value** vals) const;
+
+	/**
 	 * Internal method that registers a freshly instantiated plugin with
 	 * the manager.
 	 *
@@ -328,6 +399,9 @@ private:
 	// An array indexed by HookType. An entry is null if there's no hook
 	// of that type enabled.
 	hook_list** hooks;
+
+	// A map of all the top-level plugin directories.
+	std::map<std::string, Plugin*> plugins_by_path;
 
 	// Helpers providing access to current state during dlopen().
 	static Plugin* current_plugin;

@@ -102,6 +102,29 @@ refine connection Handshake_Conn += {
 		return true;
 		%}
 
+	function proc_client_key_share(rec: HandshakeRecord, keyshare: KeyShareEntry[]) : bool
+		%{
+		VectorVal* nglist = new VectorVal(internal_type("index_vec")->AsVectorType());
+
+		if ( keyshare )
+			{
+			for ( unsigned int i = 0; i < keyshare->size(); ++i )
+				nglist->Assign(i, new Val((*keyshare)[i]->namedgroup(), TYPE_COUNT));
+			}
+
+		BifEvent::generate_ssl_extension_key_share(bro_analyzer(), bro_analyzer()->Conn(), ${rec.is_orig}, nglist);
+		return true;
+		%}
+
+	function proc_server_key_share(rec: HandshakeRecord, keyshare: KeyShareEntry) : bool
+		%{
+		VectorVal* nglist = new VectorVal(internal_type("index_vec")->AsVectorType());
+
+		nglist->Assign(0u, new Val(keyshare->namedgroup(), TYPE_COUNT));
+		BifEvent::generate_ssl_extension_key_share(bro_analyzer(), bro_analyzer()->Conn(), ${rec.is_orig}, nglist);
+		return true;
+		%}
+
 	function proc_signature_algorithm(rec: HandshakeRecord, supported_signature_algorithms: SignatureAndHashAlgorithm[]) : bool
 		%{
 		VectorVal* slist = new VectorVal(internal_type("signature_and_hashalgorithm_vec")->AsVectorType());
@@ -162,6 +185,38 @@ refine connection Handshake_Conn += {
 
 		BifEvent::generate_ssl_extension_server_name(bro_analyzer(), bro_analyzer()->Conn(),
 		   ${rec.is_orig}, servers);
+
+		return true;
+		%}
+
+	function proc_supported_versions(rec: HandshakeRecord, versions_list: uint16[]) : bool
+		%{
+		VectorVal* versions = new VectorVal(internal_type("index_vec")->AsVectorType());
+
+		if ( versions_list )
+			{
+			for ( unsigned int i = 0; i < versions_list->size(); ++i )
+				versions->Assign(i, new Val((*versions_list)[i], TYPE_COUNT));
+			}
+
+		BifEvent::generate_ssl_extension_supported_versions(bro_analyzer(), bro_analyzer()->Conn(),
+			${rec.is_orig}, versions);
+
+		return true;
+		%}
+
+	function proc_psk_key_exchange_modes(rec: HandshakeRecord, mode_list: uint8[]) : bool
+		%{
+		VectorVal* modes = new VectorVal(internal_type("index_vec")->AsVectorType());
+
+		if ( mode_list )
+			{
+			for ( unsigned int i = 0; i < mode_list->size(); ++i )
+				modes->Assign(i, new Val((*mode_list)[i], TYPE_COUNT));
+			}
+
+		BifEvent::generate_ssl_extension_psk_key_exchange_modes(bro_analyzer(), bro_analyzer()->Conn(),
+			${rec.is_orig}, modes);
 
 		return true;
 		%}
@@ -243,6 +298,13 @@ refine typeattr ServerHello += &let {
 			compression_method);
 };
 
+refine typeattr ServerHello13 += &let {
+	proc : bool = $context.connection.proc_server_hello(server_version,
+			0, random, 0, cipher_suite, 0,
+			0);
+};
+
+
 refine typeattr Certificate += &let {
 	proc : bool = $context.connection.proc_v3_certificate(rec.is_orig, certificates);
 };
@@ -267,6 +329,14 @@ refine typeattr EllipticCurves += &let {
 	proc : bool = $context.connection.proc_elliptic_curves(rec, elliptic_curve_list);
 };
 
+refine typeattr ServerHelloKeyShare += &let {
+	proc : bool = $context.connection.proc_server_key_share(rec, keyshare);
+};
+
+refine typeattr ClientHelloKeyShare += &let {
+	proc : bool = $context.connection.proc_client_key_share(rec, keyshares);
+};
+
 refine typeattr SignatureAlgorithm += &let {
 	proc : bool = $context.connection.proc_signature_algorithm(rec, supported_signature_algorithms);
 }
@@ -289,6 +359,14 @@ refine typeattr EcServerKeyExchange += &let {
 
 refine typeattr DhServerKeyExchange += &let {
 	proc : bool = $context.connection.proc_dh_server_key_exchange(rec, dh_p, dh_g, dh_Ys);
+};
+
+refine typeattr SupportedVersions += &let {
+	proc : bool = $context.connection.proc_supported_versions(rec, versions);
+};
+
+refine typeattr PSKKeyExchangeModes += &let {
+	proc : bool = $context.connection.proc_psk_key_exchange_modes(rec, modes);
 };
 
 refine typeattr Handshake += &let {
