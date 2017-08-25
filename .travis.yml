@@ -1,5 +1,4 @@
 before_install:
-  - git submodule update --init --recursive
   - ./.travis_before_install.sh
 language: cpp
 compiler: clang
@@ -9,7 +8,6 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - bison
-      - caf
       - cmake
       - flex
       - google-perftools
