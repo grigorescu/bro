@@ -1,5 +1,6 @@
 before_install:
   - git submodule update --init --recursive
+  - ./.travis_before_install.sh
 language: cpp
 compiler: clang
 addons:
