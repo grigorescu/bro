@@ -1,6 +1,7 @@
 #!/bin/bash
 
-install_caf(ver)
+# Usage: install_caf(version_number)
+install_caf()
 {
     ver=$1
 
@@ -12,4 +13,4 @@ install_caf(ver)
     cd ..
 }
 
-install_caf("0.14.4")
+install_caf 0.14.4
