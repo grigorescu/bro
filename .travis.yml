@@ -16,4 +16,4 @@ addons:
       - python-dev
       - swig
       - zlib1g-dev
-script: ./configure && make && cd testing/btest && make
+script: ./configure && make && cd testing/btest && make btest-verbose
