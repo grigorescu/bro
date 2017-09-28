@@ -17,3 +17,4 @@ addons:
       - swig
       - zlib1g-dev
 script: ./configure && make && cd testing/btest && make btest-verbose
+after-failure: cat testing/btest/diag.log
