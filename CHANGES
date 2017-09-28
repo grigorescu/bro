@@ -1,4 +1,159 @@
 
+2.5-310 | 2017-09-21 09:10:21 -0700
+
+  * fix interaction of gridftp scripts with other thresholds. (Justin Azoff)
+
+2.5-307 | 2017-09-20 10:51:09 -0500
+
+  * BIT-1846: Updating broctl submodule to include fix for symlinking
+    issue (Jon Siwek)
+
+2.5-306 | 2017-09-18 14:43:42 -0700
+
+  * Make strerror_r portable, supporting XSI/gnu versions. (Thomas Petersen)
+
+  * Prevent crash when calling bro -U. (Thomas Petersen)
+
+  * Remove annoying error message from connsize bifs. (Johanna Amann)
+
+  * Add test to verify that log rotation works with gzipped logs (Daniel Thayer)
+
+  * Fix ascii writer to not discard a ".gz" file extension. (Daniel Thayer)
+
+    When Bro writes a compressed log, it uses a file extension of ".gz".
+    However, upon log rotation the ascii writer script function
+    "default_rotation_postprocessor_func" was discarding the ".gz"
+    file extension.  Fixed so that the correct file extension is
+    preserved after rotation. (Daniel Thayer)
+
+2.5-297 | 2017-09-11 09:26:33 -0700
+
+  * Fix small OCSP parser bug; serial numbers were not passed to events
+    (Johanna Amann)
+
+  * Fix expire-redef.bro test. (Daniel Thayer)
+
+2.5-294 | 2017-08-11 13:51:49 -0500
+
+  * Fix core.truncation unit test on macOS. (Jon Siwek)
+
+  * Fix a netcontrol test that often fails (Daniel Thayer)
+
+  * Update install instructions for Fedora 26 (Daniel Thayer)
+
+2.5-288 | 2017-08-04 14:17:10 -0700
+
+  * Fix field not being populated, which resulted in a reporter
+    messsage. Addresses BIT-1831. Reported by Chris Herdt. (Seth Hall)
+
+  * Support for OCSP and Signed Certificate Timestamp. (Liang
+    Zhu/Johanna Amann)
+
+      - OCSP parsing is added to the X.509 module.
+
+      - Signed Certificate Timestamp extraction, parsing, & validation
+        is added to the SSL, X.509, and OCSP analyzers. Validation is
+        added to the X.509 BIFs.
+
+    This adds the following events and BIFs:
+
+      - event ocsp_request(f: fa_file, version: count, requestorName: string);
+      - event ocsp_request_certificate(f: fa_file, hashAlgorithm: string, issuerNameHash: string, issuerKeyHash: string, serialNumber: string);
+      - event ocsp_response_status(f: fa_file, status: string);
+      - event ocsp_response_bytes(f: fa_file, resp_ref: opaque of ocsp_resp, status: string, version: count, responderId: string, producedAt: time, signatureAlgorithm: string, certs: x509_opaque_vector);
+      - event ocsp_response_certificate(f: fa_file, hashAlgorithm: string, issuerNameHash: string, issuerKeyHash: string, serialNumber: string, certStatus: string, revokeTime: time, revokeReason: string, thisUpdate: time, nextUpdate: time);
+      - event ocsp_extension(f: fa_file, ext: X509::Extension, global_resp: bool);
+      - event x509_ocsp_ext_signed_certificate_timestamp(f: fa_file, version: count, logid: string, timestamp: count, hash_algorithm: count, signature_algorithm: count, signature: string);
+      - event ssl_extension_signed_certificate_timestamp(c: connection, is_orig: bool, version: count, logid: string, timestamp: count, signature_and_hashalgorithm: SSL::SignatureAndHashAlgorithm, signature: string);
+      - function sct_verify(cert: opaque of x509, logid: string, log_key: string, signature: string, timestamp: count, hash_algorithm: count, issuer_key_hash: string &default=""): bool
+      - function x509_subject_name_hash(cert: opaque of x509, hash_alg: count): string
+      - function x509_issuer_name_hash(cert: opaque of x509, hash_alg: count): string
+      - function x509_spki_hash(cert: opaque of x509, hash_alg: count): string
+
+    This also changes the MIME types that we use to identify X.509
+    certificates in SSL connections from "application/pkix-cert" to
+    "application/x-x509-user-cert" for host certificates and
+    "application/x-x509-ca-cert" for CA certificates.
+
+  * The SSL scripts provide a new hook "ssl_finishing(c: connection)"
+    to trigger actions after the handshake has concluded. (Johanna
+    Amann)
+
+  * Add an internal API for protocol analyzers to provide the MIME
+    type of file data directly, disabling automatic inferrence.
+    (Johanna Amann).
+
+2.5-186 | 2017-07-28 12:22:20 -0700
+
+  * Improved handling of '%' at end of line in HTTP analyzer. (Johanna
+    Amann)
+
+  * Add canonifier to catch and release test that should fix test
+    failures. (Johanna Amann)
+
+2.5-181 | 2017-07-25 16:02:41 -0700
+
+  * Extend plugin infrastructure to catch Bro version mismatches at link
+    time.
+
+    The version number used for the function name is slightly normalized
+    to skip any git revision postfixes (i.e., "2.5-xxx" is always treated
+    as "2.5-git") so that one doesn't need to recompile all plugins after
+    every master commit. That seems good enough, usually people run into
+    this when upgrading to a new release. The Plugin API version is also
+    part of the version number.
+
+    If one loads an old plugin into a new Bro, the error message looks
+    like this:
+
+        $ bro -NN Demo::Foo
+        fatal error in /home/robin/bro/master/scripts/base/init-bare.bro, line 1:
+        cannot load plugin library /home/robin/tmp/p/build//lib/Demo-Foo.linux-x86_64.so:
+        /home/robin/tmp/p/build//lib/Demo-Foo.linux-x86_64.so: undefined symbol: bro_version_2_5_git_debug
+
+    (Robin Sommer)
+
+  * Several fixes and improvements for software version parsing.
+
+     - Addresses Philip Romero's question from the Bro mailing list.
+     - Adds Microsoft Edge as a detected browser.
+     - We are now unescaping encoded characters in software names. (Seth Hall)
+
+  * Remove another reference to now removed bro-plugins. (Johanna Amann)
+
+2.5-175 | 2017-07-07 14:35:11 -0700
+
+  * Removing aux/plugins. Most of the plugins are now Bro packages.
+    (Robin Sommer)
+
+  * Update install instructions for Debian 9. (Daniel Thayer)
+
+2.5-170 | 2017-07-07 12:20:19 -0700
+
+  * Update krb-protocol.pac (balintm)
+    This fixes parsing of KRB_AP_Options where the padding and flags were reversed.
+
+  * Add new cipher suites from draft-ietf-tls-ecdhe-psk-aead-05 (Johanna Amann)
+
+  * Test changes: remove loading of listen.bro in tests that do not use it,
+    serialize tests that load listen.bro, fix race conditions in some tests.
+    (Daniel Thayer)
+
+  * The broccoli-v6addrs "-r" option was renamed to "-R" (Daniel Thayer)
+
+2.5-156 | 2017-06-13 11:01:56 -0700
+
+  * Add 2.5.1 news file to master. (Johanna Amann)
+
+  * Remove link to no longer existing myricom plugin. (Johanna Amann)
+
+2.5-152 | 2017-06-05 15:16:49 -0700
+
+  * Remove non-existing links; this broke documentation build. (Johanna Amann)
+
+  * Fix at_least in Version.bro - it did exactly the oposite of the documented
+    behavior. (Johanna Amann)
+
 2.5-147 | 2017-05-22 20:32:32 -0500
 
   * Add nfs unittest. (Julien Wallior)
@@ -729,7 +884,7 @@
 
 2.4-683 | 2016-07-08 14:55:04 -0700
 
-  * Extendign connection history field to flag with '^' when Bro flips
+  * Extending connection history field to flag with '^' when Bro flips
     a connection's endpoints. Addresses BIT-1629. (Robin Sommer)
 
 2.4-680 | 2016-07-06 09:18:21 -0700
